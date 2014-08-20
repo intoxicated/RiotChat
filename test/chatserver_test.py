@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-class TestBasicChatServer(TestCase):
+class TestBasicChatCore(TestCase):
     def setUp(self):
         pass
 
@@ -13,21 +13,21 @@ class TestBasicChatServer(TestCase):
     def test_disconnect_server(self):
         pass
 
-class BasicChatServerTest(TestCase):
+class BasicChatCoreTest(TestCase):
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
 
-class SimpleLogTest(BasicChatServerTest):
+class SimpleLogTest(BasicChatCoreTest):
     def test_login(self):
         pass
 
     def test_logout(self):
         pass
      
-class TestChatServerFeatures(BasicChatServerTest):
+class TestChatCoreFeatures(BasicChatCoreTest):
     def test_send_msg(self):
         pass
 
