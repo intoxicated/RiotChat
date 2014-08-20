@@ -22,7 +22,7 @@ class RiotInvalidValueError(RiotValueException):
 class RiotServerException(RiotException):
     pass
 
-class RiotNameDoesNotExists(RiotServerException):
+class RiotDataNotFound(RiotServerException):
     pass 
 
 class RiotOperationFailError(RiotServerException):
@@ -34,4 +34,8 @@ class RiotDisconnectError(RiotServerException):
 class RiotRateLimitedError(RiotServerException):
     pass
 
+class RiotBadRequestError(RiotServerException):
+    pass
 
+class RiotServerUnavailableError(RiotServerException):
+    pass
