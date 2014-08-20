@@ -8,10 +8,30 @@ class RiotException(Exception):
         super(RiotException, self).__init__(msg)
         self.msg = msg
 
-class RiotInvalidRangeError(RiotException):
+class RiotValueException(RiotException):
     pass
 
-class RiotNameDoesNotExists(RiotException):
+class RiotRangeError(RiotValueException):
+    pass
+
+class RiotInvalidValueError(RiotValueException):
+    pass
+
+
+
+class RiotServerException(RiotException):
+    pass
+
+class RiotNameDoesNotExists(RiotServerException):
     pass 
+
+class RiotOperationFailError(RiotServerException):
+    pass
+
+class RiotDisconnectError(RiotServerException):
+    pass
+
+class RiotRateLimitedError(RiotServerException):
+    pass
 
 
