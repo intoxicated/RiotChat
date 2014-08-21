@@ -47,7 +47,8 @@ class RiotXMPP(object):
         #initiaite xmpp instance 
         self.xmpp = sleekxmpp.ClientXMPP(username+"@pvp.net/xiff","AIR_"+pw)
         self.xmpp.add_event_handler("session_start", self._start)
-        self.xmpp.add_event_handler("message", self._xmmp_message)
+        self.xmpp.add_event_handler("failed_auth", self._xmpp_failed_auth)
+        self.xmpp.add_event_handler("message", self._xmpp_message)
         
         self.xmpp.add_event_handler("disconnected", self._disconnected)
         self.xmpp.add_event_handler("connected", self._connected)
@@ -57,6 +58,7 @@ class RiotXMPP(object):
         self.xmpp.add_event_handler("got_online", self._xmpp_online)
         self.xmpp.add_event_handler("got_offline", self._xmpp_offline)
         self.xmpp.add_event_handler("roster_update", self._xmpp_update)
+        self.xmpp.add_event_handler("changed_status", self._xmpp_changed_status)
 
         #setup plugin
         self.xmpp.register_plugin('xep_0030') # service discovery
@@ -102,6 +104,12 @@ class RiotXMPP(object):
 
     def send_message(self, to, msg, msgType):
         self.xmpp.send_message(mto=str(to), mbody=str(msg), mtype=msgType)
+
+    def _xmpp_failed_auth(self, data):
+        """
+            server has rejected the provided login credential
+        """
+        self.trigger_event("failed_auth", data=data)
 
     def _xmpp_message(self, msg):
         """
@@ -196,13 +204,18 @@ class RiotXMPP(object):
         """
         self.trigger_event("offline", data=presence)
 
+    def _xmpp_changed_status(self, presence):
+        """ status of friend has been changed 
+            need to update tables
+        """
+        self.trigger_event("change_status", data=presence)
+
     def remove_friend(self, summoner_id):
         jid = summoner2jid(summoner_id)
         
         self.xmpp.del_roster_item(jid,\
                 callback=self.trigger_event("remove_friend", data=summoner_id))
         
-
     def add_friend(self, summoner_id, groups=[]):
         jid = summoner2jid(summoner_id)
         
