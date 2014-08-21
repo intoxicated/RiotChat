@@ -1,5 +1,10 @@
-from chatcore import ChatCore
+from riotxmpp import RiotXMPP
 
-class ChatClient(ChatCore):
+"""
+    extends RiotXMPP to provide full features 
+
+"""
+
+class RiotXMPPClient(RiotXMPP):
     pass
 
