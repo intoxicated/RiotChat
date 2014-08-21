@@ -1,3 +1,4 @@
-requests,
-json,
-sleekxmpp,
+sleekxmpp
+dnspython
+logging
+
