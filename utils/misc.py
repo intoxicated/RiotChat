@@ -1,6 +1,26 @@
+""" 
+
+helper classes 
+
 """
 
-miscellous 
+class MessageBuffer(object):
+    def __init__(self):
+        self.buf = []
+
+    def push(self, msg_from, msg, time):
+        entry = (msg_from, msg, time)
+        self.buf.append(entry)
+
+    def pop():
+        if len(self.buf) != 0:
+            return self.buf.pop(0)
+        else:
+            return None
+
+"""
+
+Misc enums
 
 """
 
@@ -17,5 +37,18 @@ class GameStatus():
 
 class Queue():
     pass
+
+"""
+
+miscellous methods
+
+"""
+
+def jid2summoner(jId):
+    pass
+
+def summoner2jid(summonerId):
+    pass
+
 
 
