@@ -33,10 +33,18 @@ class RiotXMPP(object):
         
         #initiaite xmpp instance 
         self.xmpp = sleekxmpp.ClientXMPP(username+"@pvp.net/xiff","AIR_"+pw)
-        self.xmpp.add_event_handler("session_start", self.start)
-        self.xmpp.add_event_handler("message", self.xmmp_message)
+        self.xmpp.add_event_handler("session_start", self._start)
+        self.xmpp.add_event_handler("message", self._xmmp_message)
+        
         self.xmpp.add_event_handler("disconnected", self._disconnected)
         self.xmpp.add_event_handler("connected", self._connected)
+
+        self.xmpp.add_event_handler("presence_unsubsribe", self._xmpp_unsubscribe)
+        self.xmpp.add_event_handler("presence_subscribe", self._xmpp_subscribe)
+        
+        self.xmpp.add_event_handler("got_online", self._xmpp_online)
+        self.xmpp.add_event_handler("got_offline", self._xmpp_offline)
+        self.xmpp.add_event_handler("roster_update", self._xmpp_update)
 
         #setup plugin
         self.xmpp.register_plugin('xep_0030') # service discovery
@@ -78,7 +86,10 @@ class RiotXMPP(object):
         self.xmpp.send_presence()
         self.xmpp.get_roster()
 
-    def xmpp_message(self, msg):
+    def send_message(self, to, msg):
+        pass
+
+    def _xmpp_message(self, msg):
         """
             handling incoming xmpp message 
 
@@ -102,12 +113,26 @@ class RiotXMPP(object):
         return True
 
     def _connected(self, data):
-        pass
-   
+        if self.verbose:
+            print "[RiotXMPP] connected to the server"
+        self.trigger_event("connected")
+
     def disconnect(self):
         self.xmpp.disconnect(wait=True)
 
     def _disconnected(self, data):
         if self.verbose:
             print "[RiotXMPP] Disconnected from the server"
+        self.trigger_event("disconnected")
 
+    def _xmpp_subscribe(self, presence):
+        pass
+
+    def _xmpp_unsubscribe(self, presence):
+        pass
+
+    def _xmpp_online(self, presence):
+        pass
+
+    def _xmpp_offline(self, presence):
+        pass
