@@ -35,6 +35,8 @@ class RiotXMPP(object):
         self.pw = pw
         self.region = region
         self.verbose = verbose
+        self.mucs = []
+        self.commands = {}
         #check instance of region
         
         #setup logging
@@ -61,19 +63,21 @@ class RiotXMPP(object):
         #self.xmpp.register_plugin('xep_0004') # Data forms
         #self.xmpp.register_plugin('xep_0060') # pubsub
         self.xmpp.register_plugin('xep_0199') # xmpp ping 
-        
+        self.xmpp.register_plugin('xep_0045') # muc 
+        self.xmpp.register_plugin('xep_0249') # muc invitation
+        #search for decorators and add to list
+
     def add_event_handler(event, func):
         """ add custom event handler
             you can add custom even handler for following event:
             connected,
             disconnected,
             change_status,
-            change_subscription,
+            subscribe, unsubscribe,
             failed_auth,
             got_online,
             got_offline,
-            groupchat_subject/precense/message,
-            presence_available/unavailable/subscribe(d)/unsubscribe(d)
+            remove_friend, add_friend,
             message,
             roster_update
         """
@@ -103,12 +107,27 @@ class RiotXMPP(object):
         """
             handling incoming xmpp message 
 
+            type=chat       (normal chat)
+            muc_invite=true (muc invitation)
+
         """
+        
         sender = str(msg['from'])
         time = str(msg['stamp'])
         message = '%(body)s' % msg
 
-        if msg['type'] in ('chat', 'normal'):
+        #group invitation
+        if msg['type'] == 'normal' and msg['muc_invite'] == 'true':
+            inviter = msg['inviter'] 
+            reason = '%(reason)s' % msg
+            roomid = sender
+            #join or not
+            pass
+        #group message
+        elif msg['type'] in ('normal') and "~" in sender:
+            pass
+        #normal chat
+        elif msg['type'] in ('chat'):
             #msg.reply('Thanks for sending\n%(body)s' % msg).send()
             self.trigger_event("message", msgfrom=sender, msg=message, stamp=time)
 
@@ -177,13 +196,33 @@ class RiotXMPP(object):
         """
         self.trigger_event("offline", data=presence)
 
-    def remove_friend(summoner_id):
-        self.xmpp.del_roster_item(summoner2jid(summer_id),\
+    def remove_friend(self, summoner_id):
+        jid = summoner2jid(summoner_id)
+        
+        self.xmpp.del_roster_item(jid,\
                 callback=self.trigger_event("remove_friend", data=summoner_id))
         
 
-    def add_friend(summoner_id, groups=[]):
+    def add_friend(self, summoner_id, groups=[]):
         jid = summoner2jid(summoner_id)
-        self.xmpp.send_presence_subscribe()
+        
+        self.xmpp.send_presence_subscription(pto=jid)
         self.xmpp.update_roster(jid, subscription='to', groups=groups,\
                 callback=self.trigger_event("add_friend", data=summoner_id))
+
+    def send_muc_invitation(self, roomname, summoner_id, msg):
+        jid = summoner2jid(summoner_id)
+        room = "pr" + "~" + hashlib.sha1(roomname.encode()).hexdigest() +\
+                "@" + "conference.pvp.net"
+
+        self.xmpp.plugin['xep_0249'].send_invitation(jid, room, reason=msg)
+        
+        return (roomname, room, jid)
+
+    def join_muc_room(self, room):
+        roomid = room + "/" + self.username
+        self.xmpp.send_presence(pto=roomid, pshow='groupchat')
+
+    def leave_muc_room(self, room):
+        roomid = room + "/" + self.username
+        self.xmpp.send_presence(pto=roomid, pshow='unavailable')
