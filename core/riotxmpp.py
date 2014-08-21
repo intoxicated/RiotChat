@@ -18,12 +18,27 @@ if sys.version_info < (3,0):
 else:
     raw_input = input
 
+class MessageBuffer(object):
+    def __init__(self):
+        self.buf = []
+
+    def push(self, msg_from, msg, time):
+        entry = (msg_from, msg, time)
+        self.buf.append(entry)
+
+    def pop(self):
+        if self.buf.count != 0:
+            return self.buf.pop(0)
+        else:
+            return None
+
 class RiotXMPP(object):
     def __init__(self, username, pw, region=Server.NA, verbose=False):
         self.username = username
         self.pw = pw
         self.region = region
         self.verbose = verbose
+        self.msg_buffer = MessageBuffer() 
         #check instance of region
 
         #setup logging
@@ -94,6 +109,8 @@ class RiotXMPP(object):
             handling incoming xmpp message 
 
         """
+        sender = str(msg['from'])
+
         if msg['type'] in ('chat', 'normal'):
             msg.reply('Thanks for sending\n%(body)s' % msg).send()
 
