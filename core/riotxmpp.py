@@ -30,7 +30,7 @@ def command(*args, **kwargs):
         return lambda function: decorate(function, **kwargs)
 
 class RiotXMPP(object):
-    def __init__(self, username, pw, region=Server.NA, verbose=False):
+    def __init__(self, username, pw, region="NA", verbose=False):
         self.username = username
         self.pw = pw
         self.region = region
