@@ -1,22 +1,12 @@
 from riotxmpp import RiotXMPP
 from models.serverlist import *
-
+from models.cmds import *
 import sys
 
 """
     extends RiotXMPP to provide full features 
 
 """
-cmdlst = { "send":("<to> <msg>", "send message to destine user/grp"),
-            "add":("<summoner_id>", "add summoner to your friend list"),
-            "remove":("<summoner_id>", "remove summoner from your friend list"),
-            "display":("<type> <opt>", "display options", 
-                    {"all": "display all your friends from list",
-                        "online":"display only online friends from list",
-                        "history":"display # of chat history associated with summoner"}
-            ),
-            "invite":("<to>", "send group chat invitation to summoner"),
-}
 
 class RiotXMPPClient(RiotXMPP):
     def __init__(self, usrname, pw, region="NA", verbose=False):
@@ -93,10 +83,16 @@ class RiotXMPPClient(RiotXMPP):
         self.send_message(to, msg, "chat")
 
     def add(self, summoner_id):
-        self.add_friend(summoner_id)
+        if "@" not in summoner_id: #summoner name
+            pass
+        else:
+            self.add_friend(summoner_id)
 
     def remove(self, summoner_id):
-        self.remove_friend(summoner_id)
+        if "@" not in summoner_id: #summoner name 
+            pass
+        else:
+            self.remove_friend(summoner_id)
 
     def display(self, t):
         print "ARGS TYPE: %s ARGS: %s F: %s" % (type(t), t, t[0])
