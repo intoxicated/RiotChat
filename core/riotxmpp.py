@@ -44,9 +44,6 @@ class RiotXMPP(object):
         #check instance of region
         
         #init listing
-        self.friendlist = {}
-        self.online = {}
-        self.grplst = {}
         self._chat_cache = {}
         self.user = User()
         self.roster = Roster()
@@ -64,13 +61,16 @@ class RiotXMPP(object):
         
         self.xmpp.add_event_handler("disconnected", self._disconnected)
         self.xmpp.add_event_handler("connected", self._connected)
-        self.xmpp.add_event_handler("presence_unsubsribe", self._xmpp_unsubscribe)
-        self.xmpp.add_event_handler("presence_subscribe", self._xmpp_subscribe)
+        self.xmpp.add_event_handler("presence_unsubsribe", 
+                                        self._xmpp_unsubscribe)
+        self.xmpp.add_event_handler("presence_subscribe", 
+                                        self._xmpp_subscribe)
         
         self.xmpp.add_event_handler("got_online", self._xmpp_online)
         self.xmpp.add_event_handler("got_offline", self._xmpp_offline)
         self.xmpp.add_event_handler("roster_update", self._xmpp_update)
-        self.xmpp.add_event_handler("changed_status", self._xmpp_changed_status)
+        self.xmpp.add_event_handler("changed_status", 
+                                        self._xmpp_changed_status)
 
         #setup plugin
         self.xmpp.register_plugin('xep_0030') # service discovery
@@ -222,7 +222,7 @@ class RiotXMPP(object):
             jid = presence['from']
             #update status
             status_dic = xmltodict.parse(presence['status'])
-            self.roster.updateStatus(jid, status_dic['body'])
+            self.roster.updateStatus(jid, status_dic['body'], online=True)
         self._trigger_event("online", data=presence)
         self.xmpp.send_presence(pto=presence['from'], ptype='chat',
                 pstatus=None)
