@@ -3,6 +3,8 @@ User represents a user of lol player
 """
 #from utils.misc import Division, Tier
 
+from models.riot_exception import *
+
 class Status(object):
     def __init__(self, args=None):
         #self._level = kwargs['level']
@@ -33,6 +35,13 @@ class Friend(User):
         self._substype = substype
         self._status = {} # Status()
         self._isOnline = False 
+    
+    def get_status(self):
+        formatStr = ""
+        
+        for k,v in self._status.items():
+            formatStr += "{:<10} {:<10}".format(k,v)
+        return formatStr
 
     @property
     def groupName(self):
@@ -66,7 +75,7 @@ class Friend(User):
     def name(self):
         return self._name
 
-class Roster(object):
+class RosterManager(object):
     def __init__(self):
         #key name : value (Friend object)
         self._offlineGrp = {}
@@ -104,17 +113,25 @@ class Roster(object):
             fentry.status = {} # empty dict
             self._offlineGrp[jid] = fentry
 
-    def remove(self, jid, removeType):
+    def remove(self, jid):
         """ unsubscribe a friend """
-        pass
+        if self._onlineGrp.get(jid) != None:
+            del self._onlineGrp[jid]
+        elif self._offlineGrp.get(jid) != None:
+            del self._offlineGrp[jid]
+        else:
+            raise Exception
 
-    def get(self, jid):
+    def get_friend(self, jid):
         if self._onlineGrp.get(jid) != None :
             return self._onlineGrp[jid]
         elif self._offlineGrp.get(jid) != None:
             return self._offlineGrp[jid]
         return None
 
+    def get_all(self):
+        return dict(self._offlineGrp.items() + 
+                self._onlineGrp.items())
 
 
 
