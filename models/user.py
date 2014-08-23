@@ -31,7 +31,7 @@ class Friend(User):
         self._jid = jid
         self._name = name
         self._substype = substype
-        self._status = Status()
+        self._status = {} # Status()
         self._isOnline = False 
 
     @property
@@ -55,8 +55,8 @@ class Friend(User):
         return self._status
 
     @status.setter
-    def status(self, kwargs):
-        self._status = newstatus
+    def status(self, status):
+        self._status = status
 
     @property
     def jid(self):
@@ -66,27 +66,54 @@ class Friend(User):
     def name(self):
         return self._name
 
-
-
 class Roster(object):
     def __init__(self):
         #key name : value (Friend object)
-        self._grp = {}
+        self._offlineGrp = {}
+        self._onlineGrp = {}
 
-    def add(self, summoner):
-        if isinstance(summoner, Friend):
-            self._grp[summoner.jid] = summoner
-        else:
+    def add(self, summoner, online=False):
+        if not isinstance(summoner, Friend):
             raise Exception
+        if not isOnline:
+            self._offlineGrp[summoner.jid] = summoner
+        else: 
+            self._onlineGrp[summoner.jid] = summoner
 
-    def remove(self, summoner):
-        if summoner not in self.grp.keys():
-            raise Exception
+    def updateStatus(self, jid, status, online=False):
+        fentry = "" #dummy
+        if online:
+            #if originally offline
+            if self._offlineGrp.get(jid) != None:
+                #get entry from offline
+                fentry = self._offlineGrp[jid]
+                #remove from offline
+                del self._offlineGrp[jid]
+            else:
+                fentry = self._onlineGrp[jid]
+            #update status
+            fentry.status = status
+            #insert into online
+            self._onlineGrp[jid] = fentry
+
         else:
-            del self._grp[summoner]
+            #offline case, just remove status
+            fentry = self._onlineGrp[jid]
+            del self._onlineGrp[jid]
 
-    def get(self, name):
-        return self._grp[name]
+            fentry.status = {} # empty dict
+            self._offlineGrp[jid] = fentry
+
+    def remove(self, jid, removeType):
+        """ unsubscribe a friend """
+        pass
+
+    def get(self, jid):
+        if self._onlineGrp.get(jid) != None :
+            return self._onlineGrp[jid]
+        elif self._offlineGrp.get(jid) != None:
+            return self._offlineGrp[jid]
+        return None
 
 
 

@@ -220,7 +220,6 @@ class RiotXMPP(object):
         if presence['from'] != self.xmpp.boundjid:
             #get entry for friend
             jid = presence['from']
-
             #update status
             status_dic = xmltodict.parse(presence['status'])
             self.roster.updateStatus(jid, status_dic['body'])
