@@ -14,7 +14,7 @@ from collections import defaultdict
 
 from models.riot_exception import *
 from models.serverlist import *
-from models.user import User, Friend, Roster
+from models.user import User, Friend, RosterManager
 
 if sys.version_info < (3,0):
     reload(sys)
@@ -46,7 +46,7 @@ class RiotXMPP(object):
         #init listing
         self._chat_cache = {}
         self.user = User()
-        self.roster = Roster()
+        self.roster_manager = RosterManager()
 
         #setup logging
         if self.verbose:
@@ -186,14 +186,20 @@ class RiotXMPP(object):
         """ complete list of friends 
             supclass can handle this to expand its functionality
         """
-        if self.verbose:
-            print "UPDATE<ROSTER>\n"
+
         for item in roster['roster']:
             #print "id: %s name: %s substype: %s grp: %s" % 
             #(item['jid'],item['name'],item['subscription'],item['groups'])
             fentry = Friend(str(item['jid'])+"/xiff", item['name'], 
                 item['subscription'], item['groups'])
-            self.roster.add(fentry)
+            self.roster_manager.add(fentry)
+        
+        if self.verbose:
+            print "UPDATE<ROSTER>\n"
+            #rosterlst = ""
+            #for k,v in self.roster_manager.get_all().items():
+            #    rosterlst += "%s ||" % k
+            #print rosterlst
         self._trigger_event("roster_update", data=roster['roster'])
 
     def _xmpp_subscribe(self, presence):
@@ -216,13 +222,24 @@ class RiotXMPP(object):
             update friend online list 
             send out presence message 
         """
-        print "GOT ONLINE"
-        if presence['from'] != self.xmpp.boundjid:
+        print "<RiotDEBUG> : ROUTINE GOT ONLINE"
+        
+        jid = presence['from']
+
+        #ignore if oneway subscription
+        if not self.roster_manager.is_friend(jid):
+            return None
+        
+        if self.verbose and jid != self.xmpp.boundjid:
+            print "<RiotDEBUG> " + self.roster_manager.jid2summoner(
+                    jid, False) + " is online"
+        if jid != self.xmpp.boundjid:
             #get entry for friend
-            jid = presence['from']
+
             #update status
             status_dic = xmltodict.parse(presence['status'])
-            self.roster.updateStatus(jid, status_dic['body'], online=True)
+            self.roster_manager.updateStatus(jid, status_dic['body'], 
+                                                online=True)
         self._trigger_event("online", data=presence)
         self.xmpp.send_presence(pto=presence['from'], ptype='chat',
                 pstatus=None)
@@ -231,6 +248,9 @@ class RiotXMPP(object):
         """ got offline message from xmpp
             update friend onine list 
         """
+        if presence['from'] != self.xmpp.boundjid:
+            jid = presence['from']
+            self.roster_manager.updateStatus(jid, None, online=False)
         self._trigger_event("offline", data=presence)
 
     def _xmpp_changed_status(self, presence):
@@ -238,18 +258,28 @@ class RiotXMPP(object):
             need to update tables
         """
         if presence['from'] != self.xmpp.boundjid:
-            pass  
+            jid = presence['from']
+            status_dic = xmltodict.parse(presence['status'])
+            self.roster_manager.updateStatus(jid, status_dic['body'], 
+                                                online=True)
         self._trigger_event("change_status", data=presence)
 
-    def remove_friend(self, summoner_id):
-        jid = summoner2jid(summoner_id)
-        
+    def remove_friend(self, summoner):
+        jid = ""
+        if "@" not in summoner:
+            jid = summoner2jid(summoner)
+        else:
+            jid = summoner
+
+        #remove from custom roster
+        self.roster_manager.remove(jid)
         self.xmpp.del_roster_item(jid,\
-                callback=self._trigger_event("remove_friend", data=summoner_id))
+           callback=self._trigger_event("remove_friend", data=summoner_id))
         
     def add_friend(self, summoner_id, groups=[]):
         jid = summoner2jid(summoner_id)
-        
+       
+        #self.roster_namager
         self.xmpp.send_presence_subscription(pto=jid)
         self.xmpp.update_roster(jid, subscription='to', groups=groups,\
                 callback=self._trigger_event("add_friend", data=summoner_id))
