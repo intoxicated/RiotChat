@@ -1,6 +1,7 @@
 from riotxmpp import RiotXMPP
 from models.serverlist import *
 from models.cmds import *
+from models.user import User, Friend, RosterManager
 import sys
 
 """
@@ -102,25 +103,38 @@ class RiotXMPPClient(RiotXMPP):
             self.display_online()
         elif t[0] == 'history' and t[1] != None:
             self.display_history(t[1])
+        elif t[0] == 'status' and t[1] != None:
+            self.display_status(t[1])
         else:
             print t
             print "invalid arguments for display"
 
     def display_all(self):
         #display all friends 
-        print "DISPLAY ALL"
-        pass
-    
+        flst = self.roster_manager.get_all()
+        resultStr = ""
+        for k,v in flst.items():
+            resultStr += v.name + "\n"  
+        
+        print resultStr
+
     def display_online(self):
         #display online friends
-        print "DISPLAY ONLINE"
-        pass
+        flst = self.roster_manager.onlineGrp
+        resultStr = ""
+        for k,v in flst.items():
+            resultStr += v.name + "\n"
+        
+        print resultStr
 
     def display_history(self, jid):
         #display past # of messages with summoner, or grp
         print "DISPLAY HISTORY WITH %s" % jid
         pass
 
+    def display_status(self, summoner):
+        fentry = self.roster_manager.get(summoner)
+        print fentry.get_status()
 
 def parse_cmd(cmds):
     cmdlst = cmds.split(" ")
