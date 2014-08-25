@@ -34,7 +34,7 @@ class Friend(User):
         self._name = name
         self._substype = substype
         self._status = {} # Status()
-        self._isOnline = False 
+        self._online = False 
     
     def get_status(self):
         formatStr = ""
@@ -52,11 +52,11 @@ class Friend(User):
         self._groupName = value
 
     @property
-    def isOnline(self):
+    def online(self):
         return self._isOnline
 
-    @isOnline.setter
-    def isOnline(self, online):
+    @online.setter
+    def online(self, online):
         self._isOnline = online
 
     @property
@@ -80,14 +80,28 @@ class RosterManager(object):
         #key name : value (Friend object)
         self._offlineGrp = {}
         self._onlineGrp = {}
+    
+    @property
+    def offlineGrp(self):
+        return self._offlineGrp
+
+    @property
+    def onlineGrp(self):
+        return self._onlineGrp
 
     def add(self, summoner, online=False):
         if not isinstance(summoner, Friend):
             raise Exception
-        if not isOnline:
+        if not online:
             self._offlineGrp[summoner.jid] = summoner
         else: 
             self._onlineGrp[summoner.jid] = summoner
+
+    def is_friend(self, jid):
+        if self._offlineGrp.get(jid) or self._onlineGrp.get(jid):
+            return True
+        else:
+            return False
 
     def updateStatus(self, jid, status, online=False):
         fentry = "" #dummy
@@ -122,6 +136,12 @@ class RosterManager(object):
         else:
             raise Exception
 
+    def jid2summoner(self, jid, online):
+        if online == False:
+            return self._offlineGrp[jid].name
+        else:
+            return self._offlineGrp[jid].name
+
     def get_friend(self, jid):
         if self._onlineGrp.get(jid) != None :
             return self._onlineGrp[jid]
@@ -133,6 +153,6 @@ class RosterManager(object):
         return dict(self._offlineGrp.items() + 
                 self._onlineGrp.items())
 
-
+    
 
 
