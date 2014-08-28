@@ -3,6 +3,7 @@ from models.serverlist import *
 from models.cmds import *
 from models.user import User, Friend, RosterManager
 import sys
+import os
 
 """
     extends RiotXMPP to provide full features 
@@ -17,7 +18,7 @@ class RiotXMPPClient(RiotXMPP):
         self.add_event_handler("got_online", self.got_online)
         self.add_event_handler("got_offline", self.got_offline)
         self.add_event_handler("roster_update", self.roster_update)
-        self.add_event_handler("message", self.on_message)
+        self.add_event_handler("on_message", self.on_message)
         self.add_event_handler("add_event", self.add_event)
         self.add_event_handler("remove_event", self.remove_event)
         self.add_event_handler("connected", self.connected)
@@ -47,9 +48,8 @@ class RiotXMPPClient(RiotXMPP):
             print "Terminating the program.."
         exit()
 
-    def on_message(self, msgfrom, msg, stamp, origin=None):
-        print "INCOMING MSG:"
-        print "{:<20} {:<20} {}".format(msgfrom, stamp, msg)
+    def on_message(self, msgfrom, msg, stamp):
+        print "{:<} {:<} {}".format(msgfrom, stamp, msg)
 
     def got_online(self, summoner_id):
         pass
@@ -95,18 +95,22 @@ class RiotXMPPClient(RiotXMPP):
         else:
             self.remove_friend(summoner_id)
 
-    def display(self, t):
-        print "ARGS TYPE: %s ARGS: %s F: %s" % (type(t), t, t[0])
-        if t[0] == 'all':
+    def clear(self):
+        os.system('clear')
+
+    def display(self, args):
+        print "ARGS TYPE: %s ARGS: %s" % \
+                (type(args), args[0])
+        if args[0] == 'all':
             self.display_all()
-        elif t[0] == 'online':
+        elif args[0] == 'online':
             self.display_online()
-        elif t[0] == 'history' and t[1] != None:
-            self.display_history(t[1])
-        elif t[0] == 'status' and t[1] != None:
-            self.display_status(t[1])
+        elif args[0] == 'history' and args[1] != None:
+            self.display_history(args[1])
+        elif args[0] == 'status' and args[1] != None:
+            self.display_status(args[1])
         else:
-            print t
+            print args
             print "invalid arguments for display"
 
     def display_all(self):
@@ -161,13 +165,23 @@ if __name__ == "__main__":
         #parse cmds 
         cmd, args = parse_cmd(cmds)
         print "func: %s args: %s" % (cmd, args)
-        if callable(getattr(client, cmd, None)):
-            try:
-                if args:
-                    getattr(client, cmd)(args)
-                else:
-                    getattr(client, cmd)()
-            except TypeError:
-                print "invalid arguments, try use help"
+        if cmd == "send":
+            client.send(args[0], "".join(args[1:]))
+        elif cmd == "start":
+            client.start()
+        elif cmd == "stop":
+            client.stop()
+        elif cmd == "clear":
+            client.clear()
+        elif cmd == "display":
+            client.display(args)
+        elif cmd == "add":
+            pass
+        elif cmd == "remove":
+            pass
+        elif cmd == "quit":
+            client.quit() 
+        elif cmd == "invite":
+            pass
         else:
             print "Cannot recognize command"
