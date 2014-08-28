@@ -1,0 +1,3 @@
+[submodule "riotxmpp"]
+	path = riotxmpp
+	url = git@github.com:intoxicated/RiotXMPP.git
