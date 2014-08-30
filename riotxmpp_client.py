@@ -1,9 +1,11 @@
-from riotxmpp import RiotXMPP
-from models.serverlist import *
-from models.cmds import *
-from models.user import User, Friend, RosterManager
+from riotxmpp.riotxmpp import RiotXMPP
+from riotxmpp.utils.serverlist import *
+from riotxmpp.models.cmds import *
+from riotxmpp.models.user import User, Friend, RosterManager
+
 import sys
 import os
+import re
 
 """
     extends RiotXMPP to provide full features 
@@ -48,8 +50,9 @@ class RiotXMPPClient(RiotXMPP):
             print "Terminating the program.."
         exit()
 
-    def on_message(self, msgfrom, msg, stamp):
-        print "{:<} {:<} {}".format(msgfrom, stamp, msg)
+    def on_message(self, kwargs):
+        print "{:<} {:<} {}".format(kwargs['msgfrom'],
+                kwargs['stamp'], kwargs['msg'])
 
     def got_online(self, summoner_id):
         pass
@@ -72,16 +75,19 @@ class RiotXMPPClient(RiotXMPP):
     def disconnected(self):
         pass
 
-    def grp_invitation(self):
-        #join room
+    def grp_invitation(self, user, room):
+        print "INVITE \"%s\" \"%s\"" % (user, room)
+        self.send_muc_invitation(room, user, msg="Wanna talk to you")
         pass
 
     #command wappers 
     def send(self, to, msg):
-        if self.verbose:
-            print "SEND %s %s" % (to, msg)
+        print "SEND \"%s\" \"%s\"" % (to, msg)
 
         self.send_message(to, msg, "chat")
+
+    def spam(self, to, msg):
+        pass 
 
     def add(self, summoner_id):
         if "@" not in summoner_id: #summoner name
@@ -109,9 +115,16 @@ class RiotXMPPClient(RiotXMPP):
             self.display_history(args[1])
         elif args[0] == 'status' and args[1] != None:
             self.display_status(args[1])
+        elif args[0] == 'rooms':
+            self.display_rooms()
         else:
             print args
             print "invalid arguments for display"
+
+    def display_rooms(self):
+        for room, urs in self.mucs.items():
+            print "Room Name: " + room 
+            print "Participants: " + ",".join(str(urs))
 
     def display_all(self):
         #display all friends 
@@ -142,6 +155,11 @@ class RiotXMPPClient(RiotXMPP):
 
 def parse_cmd(cmds):
     cmdlst = cmds.split(" ")
+    args = None 
+    if cmdlst[0] == "send" or cmdlst[0] == "add" or \
+        cmdlst[0] == "invite" or cmdlst[0] == "remove":
+        args = re.findall(r'\"(.+?)\"', cmds)
+        return cmdlst[0], args
 
     if len(cmdlst) == 1:
         return cmdlst[0], None
@@ -165,8 +183,9 @@ if __name__ == "__main__":
         #parse cmds 
         cmd, args = parse_cmd(cmds)
         print "func: %s args: %s" % (cmd, args)
-        if cmd == "send":
-            client.send(args[0], "".join(args[1:]))
+        
+        if cmd == "send" and len(args) == 2:
+            client.send(args[0], args[1])
         elif cmd == "start":
             client.start()
         elif cmd == "stop":
@@ -182,6 +201,6 @@ if __name__ == "__main__":
         elif cmd == "quit":
             client.quit() 
         elif cmd == "invite":
-            pass
+            client.grp_invitation(args[0], args[1])
         else:
             print "Cannot recognize command"
